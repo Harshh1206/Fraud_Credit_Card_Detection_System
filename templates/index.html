@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Credit Card Fraud Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    /* General Styles */
+    body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #1e1e2f, #2a2a3f);
+        color: #f0f0f0;
+        overflow-x: hidden;
+    }
+
+    /* Particle Background */
+    #particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+
+    .container {
+        max-width: 500px;
+        margin: 50px auto;
+        background: rgba(40, 40, 55, 0.95);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 0 40px rgba(0,0,0,0.7);
+    }
+
+    h1 {
+        text-align: center;
+        color: #f9f9f9;
+        margin-bottom: 30px;
+        font-size: 28px;
+        letter-spacing: 1px;
+    }
+
+    label {
+        display: block;
+        margin-top: 15px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+
+    input[type="text"], input[type="number"] {
+        width: 100%;
+        padding: 12px;
+        margin-top: 5px;
+        border-radius: 8px;
+        border: none;
+        outline: none;
+        font-size: 16px;
+        background: #2a2a3f;
+        color: #fff;
+        transition: 0.3s;
+    }
+
+    input[type="text"]:focus, input[type="number"]:focus {
+        background: #3a3a55;
+        box-shadow: 0 0 8px #00b894;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        margin-top: 25px;
+        background: #00b894;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 18px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        background: #019874;
+    }
+
+    button.reset-btn {
+        background: #d63031;
+        margin-top: 10px;
+    }
+
+    button.reset-btn:hover {
+        background: #b71c1c;
+    }
+
+    .result {
+        margin-top: 30px;
+        padding: 25px;
+        text-align: center;
+        font-size: 22px;
+        border-radius: 15px;
+        display: none;
+        font-weight: bold;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .fraud {
+        background: #ff4d4d;
+        box-shadow: 0 0 30px #ff4d4d;
+        color: #fff;
+    }
+
+    .valid {
+        background: #00e676;
+        box-shadow: 0 0 30px #00e676;
+        color: #1a1a1a;
+    }
+
+    @keyframes fadeIn {
+        from {opacity: 0; transform: translateY(-10px);}
+        to {opacity: 1; transform: translateY(0);}
+    }
+
+    .contact {
+        margin-top: 15px;
+        font-size: 14px;
+        color: #ccc;
+    }
+
+    .contact a {
+        color: #ff6b6b;
+        text-decoration: none;
+    }
+
+    .contact a:hover {
+        text-decoration: underline;
+    }
+
+    footer {
+        text-align: center;
+        margin-top: 40px;
+        font-size: 12px;
+        color: #888;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+        .container {
+            margin: 20px;
+            padding: 30px;
+        }
+        h1 {
+            font-size: 24px;
+        }
+        .result {
+            font-size: 20px;
+        }
+    }
+</style>
+</head>
+<body>
+<div id="particles"></div>
+
+<div class="container">
+    <h1>Credit Card Fraud Detector</h1>
+
+    <label for="name">Name (optional):</label>
+    <input type="text" id="name" placeholder="Enter your name">
+
+    <label for="V2">V2:</label>
+    <input type="number" id="V2" placeholder="Enter V2 value">
+
+    <label for="V4">V4:</label>
+    <input type="number" id="V4" placeholder="Enter V4 value">
+
+    <label for="V11">V11:</label>
+    <input type="number" id="V11" placeholder="Enter V11 value">
+
+    <label for="Amount">Amount:</label>
+    <input type="number" id="Amount" placeholder="Enter transaction amount">
+
+    <button onclick="makePrediction()">Predict</button>
+    <button class="reset-btn" onclick="resetForm()">Reset</button>
+
+    <div class="result" id="result"></div>
+    <div class="contact" id="contact"></div>
+</div>
+
+<footer>
+    &copy; 2025 Credit Card Fraud Detector. This tool is for educational purposes only.  
+</footer>
+
+<script>
+async function makePrediction() {
+    const V2 = document.getElementById('V2').value;
+    const V4 = document.getElementById('V4').value;
+    const V11 = document.getElementById('V11').value;
+    const Amount = document.getElementById('Amount').value;
+
+    const response = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ V2, V4, V11, Amount })
+    });
+
+    const data = await response.json();
+    const resultDiv = document.getElementById('result');
+    const contactDiv = document.getElementById('contact');
+
+    if (data.error) {
+        resultDiv.style.display = 'block';
+        resultDiv.textContent = "Error: " + data.error;
+        resultDiv.className = 'result fraud';
+        contactDiv.innerHTML = '';
+        return;
+    }
+
+    if (data.prediction === 1) {
+        resultDiv.textContent = "Prediction: Fraud";
+        resultDiv.className = 'result fraud';
+        contactDiv.innerHTML = `
+            ⚠️ Suspected fraud! Contact immediately:<br>
+            - Indian Cyber Crime Cell: <a href="https://cybercrime.gov.in/" target="_blank">cybercrime.gov.in</a><br>
+            - Police Helpline: 155260<br>
+            - Local Police Station
+        `;
+    } else {
+        resultDiv.textContent = "Prediction: Valid";
+        resultDiv.className = 'result valid';
+        contactDiv.innerHTML = '';
+    }
+
+    resultDiv.style.display = 'block';
+}
+
+function resetForm() {
+    document.getElementById('V2').value = '';
+    document.getElementById('V4').value = '';
+    document.getElementById('V11').value = '';
+    document.getElementById('Amount').value = '';
+    document.getElementById('name').value = '';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('contact').innerHTML = '';
+}
+</script>
+</body>
+</html>
